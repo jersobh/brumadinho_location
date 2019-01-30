@@ -1,12 +1,22 @@
 <template>
   <q-page class="flex flex-center">
     <q-btn
+    v-if="!isTracking"
     style="position:fixed;z-index:10000;right:30px;top:10px;width:62px;height:62px;"
     round
     icon="my_location"
     color="red"
     big
     @click="startTracking"
+    />
+    <q-btn
+    v-if="isTracking"
+    style="position:fixed;z-index:10000;right:30px;top:10px;width:62px;height:62px;"
+    round
+    icon="stop"
+    color="red"
+    big
+    @click="stopTracking"
     />
     <l-map
       :zoom="zoom"
@@ -161,6 +171,8 @@ export default {
       showAddModal: false,
       currentSelection: 'Pessoa',
       lastPosition: null,
+      watcher: null,
+      isTracking: false,
       currentLocation: null,
       url: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
       iconSize: 64,
@@ -203,13 +215,15 @@ export default {
     },
     startTracking () {
       if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(this.registerLocation)
+        this.watcher = navigator.geolocation.watchPosition(this.registerLocation)
+        this.isTracking = true
       } else {
         alert('Geo Location not supported by browser')
       }
     },
     stopTracking () {
-
+      navigator.geolocation.clearWatch(this.watcher)
+      this.isTracking = false
     },
     registerLocation (position) {
       let location = {
