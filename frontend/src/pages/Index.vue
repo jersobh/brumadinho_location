@@ -1,5 +1,13 @@
 <template>
   <q-page class="flex flex-center">
+    <q-btn
+    style="position:fixed;z-index:10000;right:30px;top:10px;width:62px;height:62px;"
+    round
+    icon="my_location"
+    color="red"
+    big
+    @click="startTracking"
+    />
     <l-map
       :zoom="zoom"
       :center="center"
@@ -9,6 +17,7 @@
       @update:zoom="zoomUpdate"
       @click="clickMap"
     >
+
       <l-tile-layer
         :url="url"
         :attribution="attribution"
@@ -46,6 +55,24 @@
               Contato (familiar):<br /> {{animal.phone}}
               <br />
               <q-btn @click="removePerson(person.id)">Remover</q-btn>
+            </p>
+          </div>
+        </l-popup>
+      </l-marker>
+      <l-marker v-for="search in searches" :key="search.id" :lat-lng="search.location">
+        <l-icon
+          :icon-size="[32, 32]"
+          :icon-anchor="[16, 32]"
+          icon-url="statics/icons/busca.png" />
+        <l-popup style="width:100px;" :options="{permanent: true, interactive: true}">
+          <div @click="search.showInfo = !search.showInfo">
+            {{search.name}}
+            <p v-show="true">
+              <br />
+              Hora: <br /> {{search.time}}
+              <br />
+              Localização:<br /> latitude: {{search.location.lat}}<br /> longitude: {{search.location.lng}}
+              <br />
             </p>
           </div>
         </l-popup>
@@ -133,6 +160,7 @@ export default {
       center: L.latLng(-20.135896, -44.123509),
       showAddModal: false,
       currentSelection: 'Pessoa',
+      lastPosition: null,
       currentLocation: null,
       url: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
       iconSize: 64,
@@ -142,6 +170,7 @@ export default {
         {id: 2, name: 'Marcelo', photo: '', phone: '31 9999-9999', showInfo: true, location: L.latLng(-20.145896, -44.123509)}
       ],
       animals: [],
+      searches: [],
       currentZoom: 14.5,
       currentCenter: L.latLng(47.413220, -1.219482),
       showParagraph: false,
@@ -171,6 +200,29 @@ export default {
         this.animals.push({id: this.genID(), name: this.form.name, phone: this.form.phone, location: this.currentLocation})
       }
       this.showAddModal = false
+    },
+    startTracking () {
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(this.registerLocation)
+      } else {
+        alert('Geo Location not supported by browser')
+      }
+    },
+    stopTracking () {
+
+    },
+    registerLocation (position) {
+      let location = {
+        longitude: position.coords.longitude,
+        latitude: position.coords.latitude
+      }
+      if (location !== this.lastPosition) {
+        console.log(location)
+        this.lastPosition = location
+        let mapLocation = L.latLng(location.latitude, location.longitude)
+        this.center = mapLocation
+        this.searches.push({id: this.genID(), name: this.form.name, time: new Date().toLocaleTimeString(), location: mapLocation})
+      }
     },
     clickMap (event) {
       console.log(event)
