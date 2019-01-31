@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "vue2-leaflet": "^1.2.3"
+    "vue2-leaflet": "^1.2.3",
+    "vue2-leaflet-heatmap": "^1.0.5"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.1",

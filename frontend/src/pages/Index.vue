@@ -27,7 +27,7 @@
       @update:zoom="zoomUpdate"
       @click="clickMap"
     >
-
+    <LeafletHeatmap :lat-lng="heatmap" :max="maxValue" :radius="15"></LeafletHeatmap>
       <l-tile-layer
         :url="url"
         :attribution="attribution"
@@ -151,6 +151,7 @@
 
 <script>
 import { L, LMap, LTileLayer, LMarker, LPopup, LTooltip, LIcon } from 'vue2-leaflet'
+import LeafletHeatmap from 'vue2-leaflet-heatmap'
 
 export default {
   name: 'PageIndex',
@@ -160,7 +161,8 @@ export default {
     LMarker,
     LPopup,
     LTooltip,
-    LIcon
+    LIcon,
+    LeafletHeatmap
   },
   data () {
     return {
@@ -183,6 +185,7 @@ export default {
       ],
       animals: [],
       searches: [],
+      heatmap: [],
       currentZoom: 14.5,
       currentCenter: L.latLng(47.413220, -1.219482),
       showParagraph: false,
@@ -236,6 +239,7 @@ export default {
         let mapLocation = L.latLng(location.latitude, location.longitude)
         this.center = mapLocation
         this.searches.push({id: this.genID(), name: this.form.name, time: new Date().toLocaleTimeString(), location: mapLocation})
+        this.heatmap.push(mapLocation)
       }
     },
     clickMap (event) {
