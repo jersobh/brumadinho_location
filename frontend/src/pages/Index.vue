@@ -2,7 +2,7 @@
   <q-page class="flex flex-center">
     <q-btn
     v-if="!isTracking"
-    style="position:fixed;z-index:10000;right:30px;top:10px;width:62px;height:62px;"
+    style="position:fixed;z-index:2999;bottom:30px;width:62px;height:62px;"
     round
     icon="my_location"
     color="red"
@@ -11,7 +11,7 @@
     />
     <q-btn
     v-if="isTracking"
-    style="position:fixed;z-index:10000;right:30px;top:10px;width:62px;height:62px;"
+    style="position:fixed;z-index:2999;bottom:30px;width:62px;height:62px;"
     round
     icon="stop"
     color="red"
@@ -27,12 +27,12 @@
       @update:zoom="zoomUpdate"
       @click="clickMap"
     >
-    <LeafletHeatmap :lat-lng="heatmap" :max="maxValue" :radius="15"></LeafletHeatmap>
-      <l-tile-layer
-        :url="url"
-        :attribution="attribution"
-      />
-      <l-marker v-for="person in people" :key="person.id" :lat-lng="person.location">
+    <LeafletHeatmap v-if="display.heatmapLayer" :lat-lng="heatmap" :max="maxValue" :radius="30"></LeafletHeatmap>
+    <l-tile-layer
+      :url='layers[currentLayer].url'
+      :attribution='layers[currentLayer].attribution'
+    />
+      <l-marker v-if="display.personIcons" v-for="person in people" :key="person.id" :lat-lng="person.location">
         <l-icon
           :icon-size="[32, 32]"
           :icon-anchor="[16, 32]"
@@ -51,7 +51,7 @@
           </div>
         </l-popup>
       </l-marker>
-      <l-marker v-for="animal in animals" :key="animal.id" :lat-lng="animal.location">
+      <l-marker v-if="display.animalIcons" v-for="animal in animals" :key="animal.id" :lat-lng="animal.location">
         <l-icon
           :icon-size="[32, 32]"
           :icon-anchor="[16, 32]"
@@ -64,12 +64,12 @@
               <br />
               Contato (familiar):<br /> {{animal.phone}}
               <br />
-              <q-btn @click="removePerson(person.id)">Remover</q-btn>
+              <q-btn @click="removeAnimal(animal.id)">Remover</q-btn>
             </p>
           </div>
         </l-popup>
       </l-marker>
-      <l-marker v-for="search in searches" :key="search.id" :lat-lng="search.location">
+      <l-marker v-if="display.searchIcons" v-for="search in searches" :key="search.id" :lat-lng="search.location">
         <l-icon
           :icon-size="[32, 32]"
           :icon-anchor="[16, 32]"
@@ -121,7 +121,7 @@
         </div>
         <div class="row">
           <q-field style="width: 100%;">
-            <q-input v-model="form.phone" float-label="Telefone de contato (familiar)" />
+            <q-input v-model="form.phone" type="tel" float-label="Telefone de contato (familiar)" />
           </q-field>
         </div>
         <div class="row fix-right" style="float:right;">
@@ -176,6 +176,8 @@ export default {
       watcher: null,
       isTracking: false,
       currentLocation: null,
+      currentLayer: 'map',
+      maxValue: null,
       url: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
       iconSize: 64,
       attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
@@ -196,6 +198,29 @@ export default {
         name: '',
         phone: '',
         photo: ''
+      },
+      display: {
+        heatmapLayer: true,
+        searchIcons: false,
+        personIcons: true,
+        animalIcons: true,
+        satelliteLayer: false,
+        topologyLayer: false
+      },
+      layers: {
+        map: {
+          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        },
+        satellite: {
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        },
+        topology: {
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+          maxZoom: 17,
+          attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+        }
       }
     }
   },
@@ -229,14 +254,13 @@ export default {
       this.isTracking = false
     },
     registerLocation (position) {
-      let location = {
+      var location = {
         longitude: position.coords.longitude,
         latitude: position.coords.latitude
       }
       if (location !== this.lastPosition) {
-        console.log(location)
         this.lastPosition = location
-        let mapLocation = L.latLng(location.latitude, location.longitude)
+        var mapLocation = L.latLng(location.latitude, location.longitude)
         this.center = mapLocation
         this.searches.push({id: this.genID(), name: this.form.name, time: new Date().toLocaleTimeString(), location: mapLocation})
         this.heatmap.push(mapLocation)
@@ -256,8 +280,8 @@ export default {
     removePerson (id) {
       this.people = this.people.filter(function (el) { return el.id !== id })
     },
-    removeAnimal () {
-      // this.animals = this.animals.filter(function (el) { return el.id !== id })
+    removeAnimal (id) {
+      this.animals = this.animals.filter(function (el) { return el.id !== id })
     },
     zoomUpdate (zoom) {
       this.currentZoom = zoom
@@ -270,10 +294,29 @@ export default {
     },
     innerClick () {
       alert('Click!')
+    },
+    toggleHeatmapLayer (val) {
+      this.display.heatmapLayer = val
+    },
+    togglePersonIcons (val) {
+      this.display.personIcons = val
+    },
+    toggleSearchIcons (val) {
+      this.display.searchIcons = val
+    },
+    toggleAnimalIcons (val) {
+      this.display.animalIcons = val
+    },
+    toggleLayer (val) {
+      this.currentLayer = val
     }
   },
   mounted () {
-    console.log(LMap)
+    this.$root.$on('enable-personIcons', this.togglePersonIcons)
+    this.$root.$on('enable-animalIcons', this.toggleAnimalIcons)
+    this.$root.$on('enable-searchIcons', this.toggleSearchIcons)
+    this.$root.$on('enable-Heatmap', this.toggleHeatmapLayer)
+    this.$root.$on('enable-layer', this.toggleLayer)
   }
 }
 </script>
