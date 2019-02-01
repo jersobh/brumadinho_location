@@ -91,8 +91,10 @@
     <q-modal v-model="showAddModal">
       <div style="width:300px; float:left;padding:4%;">
         <div class="row">
-          <span>Cadastrar</span>
+          <span><b>Cadastrar</b></span>
+
         </div>
+        <br />
         <div class="row">
           <span>Tipo</span>
             <q-field style="width: 100%;">
@@ -121,15 +123,17 @@
         </div>
         <div class="row">
           <q-field style="width: 100%;">
-            <q-input v-model="form.phone" type="tel" float-label="Telefone de contato (familiar)" />
+            <q-input v-model="form.phone" type="tel" float-label="Telefone de contato" />
           </q-field>
         </div>
+        <br />
         <div class="row fix-right" style="float:right;">
         <q-btn
           color="primary"
           @click="add"
           label="Cadastrar"
         />
+        &nbsp;
         <q-btn
           color="red"
           @click="showAddModal = false"
@@ -178,9 +182,7 @@ export default {
       currentLocation: null,
       currentLayer: 'map',
       maxValue: null,
-      url: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
       iconSize: 64,
-      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
       people: [
         {id: 1, name: 'João', photo: '', phone: '31 9999-9999', showInfo: true, location: L.latLng(-20.135896, -44.123509)},
         {id: 2, name: 'Marcelo', photo: '', phone: '31 9999-9999', showInfo: true, location: L.latLng(-20.145896, -44.123509)}
@@ -242,8 +244,9 @@ export default {
       this.showAddModal = false
     },
     startTracking () {
+      var options = { maximumAge: 3000, timeout: 5000, enableHighAccuracy: true }
       if (navigator.geolocation) {
-        this.watcher = navigator.geolocation.watchPosition(this.registerLocation)
+        this.watcher = navigator.geolocation.watchPosition(this.registerLocation, null, options)
         this.isTracking = true
       } else {
         alert('Geo Location not supported by browser')

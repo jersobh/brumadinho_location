@@ -6,8 +6,8 @@
         :inverted="$q.theme === 'ios'"
       >
         <q-toolbar-title>
-          Brumadinho Location Tool
-          <div slot="subtitle">Location estimative on Brumadinho disaster</div>
+          Location Tool
+          <div slot="subtitle">Report</div>
         </q-toolbar-title>
         <q-btn
           flat
