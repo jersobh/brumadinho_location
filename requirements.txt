@@ -4,5 +4,5 @@ djangorestframework==3.9.1
 googlemaps==4.4.1
 numpy==1.16.0
 python-decouple==3.1
-pytz==2018.9
+pytz==2021.1
 scipy==1.2.0
