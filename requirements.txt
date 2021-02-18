@@ -5,4 +5,4 @@ googlemaps==4.4.1
 numpy==1.16.0
 python-decouple==3.1
 pytz==2018.9
-scipy==1.2.0
+scipy==1.6.1
